@@ -27,5 +27,18 @@ class UserSerializeer(serializers.ModelSerializer):
                 else:
                     setattr(instance, field, validated_data[field])
 
-        instance.save()            
+        instance.save()
         return instance
+
+
+class LoginSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["username", "password"]
+
+    def validate(self, attrs):
+        username = attrs.get("username")
+        password = attrs.get("password")
+        if not username or not password:
+            raise serializers.ValidationError("Email and password required")
+        return attrs
