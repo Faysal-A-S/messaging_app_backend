@@ -14,21 +14,28 @@ class RegisterView(APIView):
         serializer = UserSerializeer(data=request.data
                                      )
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            user = serializer.save()
+            return Response({"success": True, "message": "User registered successfully", "result": {
+                "id": user.id,
+                "username": user.username
+            }})
+        return Response({
+            "success": False,
+            "message": "Registration failed",
+            "error": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data.get("username")
-        password = serializer.validated_data.get("password")
+        username = serializer.validated_data.get("username").strip()
+        password = serializer.validated_data.get("password").strip()
         user = authenticate(username=username, password=password)
-
         if user is not None:
             refresh = RefreshToken.for_user(user)
             return Response({
@@ -44,5 +51,6 @@ class LoginView(APIView):
 
         return Response({
             "success": False,
-            "message": "User unauthorized"
+            "message": "User unauthorized",
+            "error": serializer.errors
         }, status=status.HTTP_401_UNAUTHORIZED,)
