@@ -4,9 +4,11 @@ from rest_framework import status, permissions
 from .serializers import UserSerializeer, LoginSerializer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from .models import User
 
 # Create your views here.
+
+
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -54,3 +56,19 @@ class LoginView(APIView):
             "message": "User unauthorized",
             "error": serializer.errors
         }, status=status.HTTP_401_UNAUTHORIZED,)
+
+
+class Userlist(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        query = request.query_params.get("user", "")
+        users = User.objects.filter(
+            username__icontains=query).order_by("username")
+        serializer = UserSerializeer(users, many=True)
+
+        return Response({
+            "message": "user fetched successfully",
+            "result": serializer.data,
+            "success": True
+        }, status=status.HTTP_200_OK)
